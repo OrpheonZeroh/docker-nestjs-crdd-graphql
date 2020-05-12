@@ -1,0 +1,55 @@
+version: '3.3'
+
+services: 
+    graphql:
+        build: 
+            context: .
+            dockerfile: dockerfile
+        expose:
+            - "3000"
+        volumes: 
+            - .:/app
+        container_name: graphql
+        restart: unless-stopped
+        depends_on: 
+            - db
+        links: 
+            - db:graphql
+        networks:
+            - app-networks
+
+    webserver: 
+        image: nginx:stable
+        container_name: webserver
+        restart: unless-stopped
+        ports: 
+            - "81:80"
+        volumes:
+            - "./nginx.conf:/etc/nginx/conf.d/default.conf"
+        depends_on: 
+            - graphql
+        networks: 
+            - app-networks
+        links:
+            - graphql:webserver
+
+    db:
+        container_name: postgres
+        image: postgres:alpine
+        hostname: postgres
+        restart: unless-stopped
+        expose:
+            - "5432"
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: password
+            POSTGRES_DB: postgres
+        networks: 
+            - app-networks
+
+networks: 
+    app-networks:
+        driver: bridge
+
+        
+    
